@@ -26,10 +26,10 @@ public class GuardController extends BaseController {
 		ServerResponse<List<OrderItem>> serverResponse = new ServerResponse<List<OrderItem>>();
 
 		BizResponse<List<OrderItem>> bizResp = bizProductStockService.retriveProductStockByReadRfid();
-		if (bizResp != null && bizResp.getData() != null && bizResp.getData().size() > 0) {
+		if (bizResp != null) {
 			serverResponse.setData(bizResp.getData());
-			serverResponse.setHasData("1");
-			serverResponse.setTotalFee(bizResp.getTotalFee());
+			serverResponse.setHasData(bizResp.getHasData());
+			serverResponse.setAllPaided(bizResp.getAllPaided());
 		}
 
 		return serverResponse;

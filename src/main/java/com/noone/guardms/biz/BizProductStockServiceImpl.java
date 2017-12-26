@@ -31,7 +31,7 @@ public class BizProductStockServiceImpl implements BizProductStockService {
 		BizResponse<List<OrderItem>> bizResp = new BizResponse<List<OrderItem>>();
 
 		RFIDNetReaderFactory factory = RFIDNetReaderFactory.getInstance();
-		Set<String> rfidSet = factory.readAllRFID("192.168.0.99");
+		Set<String> rfidSet = factory.readAllRFID("192.168.5.7");
 
 		System.out.println("rfid :" + rfidSet);
 
@@ -57,8 +57,9 @@ public class BizProductStockServiceImpl implements BizProductStockService {
 		}
 
 		if (rfidSet.size() != stockList.size()) {
-			bizResp.addError("some rfid has't readed in stock...");
-			return bizResp;
+			System.out.println("some rfid has't readed in stock...");
+			// bizResp.addError("some rfid has't readed in stock...");
+			// return bizResp;
 		}
 
 		convertToOrderItem(stockList, bizResp);
@@ -106,6 +107,12 @@ public class BizProductStockServiceImpl implements BizProductStockService {
 		double convertedTotalFee = new BigDecimal(totalFee).setScale(3, BigDecimal.ROUND_HALF_UP).doubleValue();
 		bizResp.setTotalFee(convertedTotalFee);
 		bizResp.setData(list);
+		
+		if(list.size() == 0) {
+			bizResp.setAllPaided("1");
+		} else {
+			bizResp.setHasData("1");
+		}
 
 		return list;
 	}
