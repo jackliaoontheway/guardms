@@ -25,19 +25,26 @@ public class BizProductStockServiceImpl implements BizProductStockService {
 	@Autowired
 	ProductStockRepository productStockRepository;
 
+	private final static String netRFIDIP = "192.168.5.7";
+	
 	@Override
 	public BizResponse<List<OrderItem>> retriveProductStockByReadRfid() {
 
 		BizResponse<List<OrderItem>> bizResp = new BizResponse<List<OrderItem>>();
-
+		
 		RFIDNetReaderFactory factory = RFIDNetReaderFactory.getInstance();
-		Set<String> rfidSet = factory.readAllRFID("192.168.5.7");
+		Set<String> rfidSet = factory.readAllRFID(netRFIDIP);
 
 		System.out.println("rfid :" + rfidSet);
 
 		if (rfidSet == null || rfidSet.size() == 0) {
 			bizResp.addError("No rfid has been readed...");
 			return bizResp;
+		} else {
+			Set<String> rfidSet2 = factory.readAllRFID(netRFIDIP);
+			if(rfidSet2 != null) {
+				rfidSet.addAll(rfidSet2);
+			}
 		}
 
 		List<ProductStock> stockList = new ArrayList<ProductStock>();
