@@ -36,7 +36,7 @@ public class BizProductStockServiceImpl implements BizProductStockService {
 		Calendar c = Calendar.getInstance();
 		
 		RFIDNetReaderFactory factory = RFIDNetReaderFactory.getInstance();
-		Set<String> rfidSet = factory.readAllRFID(netRFIDIP);
+		Set<String> rfidSet = factory.readAllRFID(netRFIDIP,c.getTime());
 		System.out.println("first :" + rfidSet);
 
 		if (rfidSet == null || rfidSet.size() == 0) {
@@ -48,7 +48,7 @@ public class BizProductStockServiceImpl implements BizProductStockService {
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
-			Set<String> rfidSet2 = factory.readAllRFID(netRFIDIP);
+			Set<String> rfidSet2 = factory.readAllRFID(netRFIDIP,c.getTime());
 			System.out.println("second :" + rfidSet2);
 			if(rfidSet2 != null) {
 				rfidSet.addAll(rfidSet2);
@@ -58,7 +58,7 @@ public class BizProductStockServiceImpl implements BizProductStockService {
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
-			Set<String> rfidSet3 = factory.readAllRFID(netRFIDIP);
+			Set<String> rfidSet3 = factory.readAllRFID(netRFIDIP,c.getTime());
 			System.out.println("third :" + rfidSet3);
 			if(rfidSet3 != null) {
 				rfidSet.addAll(rfidSet3);
