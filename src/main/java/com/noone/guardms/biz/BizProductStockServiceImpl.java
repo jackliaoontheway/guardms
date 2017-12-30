@@ -34,6 +34,8 @@ public class BizProductStockServiceImpl implements BizProductStockService {
 		BizResponse<List<OrderItem>> bizResp = new BizResponse<List<OrderItem>>();
 		
 		Calendar c = Calendar.getInstance();
+		c.set(Calendar.SECOND, c.get(Calendar.SECOND) - 6);
+		c.set(Calendar.MILLISECOND,0);
 		
 		RFIDNetReaderFactory factory = RFIDNetReaderFactory.getInstance();
 		Set<String> rfidSet = factory.readAllRFID(netRFIDIP,c.getTime());
