@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -23,6 +24,8 @@ import com.rfid.netreader.RFIDNetReaderFactory;
 @Component
 public class BizProductStockServiceImpl implements BizProductStockService {
 
+	Logger logger = Logger.getLogger(BizProductStockServiceImpl.class);
+	
 	@Autowired
 	ProductStockRepository productStockRepository;
 
@@ -37,7 +40,7 @@ public class BizProductStockServiceImpl implements BizProductStockService {
 		
 		RFIDNetReaderFactory factory = RFIDNetReaderFactory.getInstance();
 		Set<String> rfidSet = factory.readAllRFID(netRFIDIP,c.getTime());
-		System.out.println("first :" + rfidSet);
+		logger.info("first :" + rfidSet);
 
 		if (rfidSet == null || rfidSet.size() == 0) {
 			bizResp.addError("No rfid has been readed...");
@@ -49,23 +52,23 @@ public class BizProductStockServiceImpl implements BizProductStockService {
 				e.printStackTrace();
 			}
 			Set<String> rfidSet2 = factory.readAllRFID(netRFIDIP,c.getTime());
-			System.out.println("second :" + rfidSet2);
+			logger.info("second :" + rfidSet2);
 			if(rfidSet2 != null) {
 				rfidSet.addAll(rfidSet2);
 			}
 			try {
-				Thread.sleep(1000);
+				Thread.sleep(500);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
 			Set<String> rfidSet3 = factory.readAllRFID(netRFIDIP,c.getTime());
-			System.out.println("third :" + rfidSet3);
+			logger.info("third :" + rfidSet3);
 			if(rfidSet3 != null) {
 				rfidSet.addAll(rfidSet3);
 			}
 		}
 		
-		System.out.println("all rfid :" + rfidSet);
+		logger.info("all rfid :" + rfidSet);
 
 		List<ProductStock> stockList = new ArrayList<ProductStock>();
 
@@ -84,7 +87,7 @@ public class BizProductStockServiceImpl implements BizProductStockService {
 		}
 
 		if (rfidSet.size() != stockList.size()) {
-			System.out.println("some rfid has't readed in stock...");
+			logger.info("some rfid has't readed in stock...");
 			// bizResp.addError("some rfid has't readed in stock...");
 			// return bizResp;
 		}
