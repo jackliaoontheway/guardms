@@ -2,7 +2,7 @@ package com.noone.guardms.biz;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,12 +33,13 @@ public class BizProductStockServiceImpl implements BizProductStockService {
 
 		BizResponse<List<OrderItem>> bizResp = new BizResponse<List<OrderItem>>();
 		
-		Calendar c = Calendar.getInstance();
-		c.set(Calendar.SECOND, c.get(Calendar.SECOND) - 6);
-		c.set(Calendar.MILLISECOND,0);
+		// Calendar c = Calendar.getInstance();
+		// c.set(Calendar.SECOND, c.get(Calendar.SECOND) - 15);
+		// c.set(Calendar.MILLISECOND,0);
+		Date startDate = null;
 		
 		RFIDNetReaderFactory factory = RFIDNetReaderFactory.getInstance();
-		Set<String> rfidSet = factory.readAllRFID(netRFIDIP,c.getTime());
+		Set<String> rfidSet = factory.readAllRFID(netRFIDIP,startDate);
 		System.out.println("first :" + rfidSet);
 
 		if (rfidSet == null || rfidSet.size() == 0) {
@@ -50,7 +51,7 @@ public class BizProductStockServiceImpl implements BizProductStockService {
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
-			Set<String> rfidSet2 = factory.readAllRFID(netRFIDIP,c.getTime());
+			Set<String> rfidSet2 = factory.readAllRFID(netRFIDIP,startDate);
 			System.out.println("second :" + rfidSet2);
 			if(rfidSet2 != null) {
 				rfidSet.addAll(rfidSet2);
@@ -60,7 +61,7 @@ public class BizProductStockServiceImpl implements BizProductStockService {
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
-			Set<String> rfidSet3 = factory.readAllRFID(netRFIDIP,c.getTime());
+			Set<String> rfidSet3 = factory.readAllRFID(netRFIDIP,startDate);
 			System.out.println("third :" + rfidSet3);
 			if(rfidSet3 != null) {
 				rfidSet.addAll(rfidSet3);
