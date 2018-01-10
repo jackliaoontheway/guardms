@@ -2,6 +2,7 @@ package com.noone.guardms.biz;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -33,10 +34,10 @@ public class BizProductStockServiceImpl implements BizProductStockService {
 
 		BizResponse<List<OrderItem>> bizResp = new BizResponse<List<OrderItem>>();
 		
-		// Calendar c = Calendar.getInstance();
-		// c.set(Calendar.SECOND, c.get(Calendar.SECOND) - 15);
-		// c.set(Calendar.MILLISECOND,0);
-		Date startDate = null;
+		Calendar c = Calendar.getInstance();
+		c.set(Calendar.SECOND, c.get(Calendar.SECOND) - 7);
+		c.set(Calendar.MILLISECOND,0);
+		Date startDate = c.getTime();
 		
 		RFIDNetReaderFactory factory = RFIDNetReaderFactory.getInstance();
 		Set<String> rfidSet = factory.readAllRFID(netRFIDIP,startDate);
@@ -56,7 +57,7 @@ public class BizProductStockServiceImpl implements BizProductStockService {
 			if(rfidSet2 != null) {
 				rfidSet.addAll(rfidSet2);
 			}
-			try {
+			/*try {
 				Thread.sleep(1000);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
@@ -65,7 +66,7 @@ public class BizProductStockServiceImpl implements BizProductStockService {
 			System.out.println("third :" + rfidSet3);
 			if(rfidSet3 != null) {
 				rfidSet.addAll(rfidSet3);
-			}
+			}*/
 		}
 		
 		System.out.println("all rfid :" + rfidSet);
