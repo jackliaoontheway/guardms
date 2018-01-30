@@ -55,7 +55,7 @@ public class SerialTool {
 			String portName = portList.nextElement().getName();
 			portNameList.add(portName);
 		}
-
+		
 		return portNameList;
 
 	}

@@ -1,18 +1,15 @@
 package com.noone.guardms.biz;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 
 import com.noone.guardms.biz.sensor.SensorStatus;
 import com.noone.guardms.biz.sensor.SensorUtils;
@@ -89,10 +86,6 @@ public class BizProductStockServiceImpl implements BizProductStockService {
 			}
 		}
 
-		if (stockList.size() == 0) {
-			logger.info("rfid has't readed in stock...");
-		}
-
 		if (rfidSet.size() != stockList.size()) {
 			logger.info("some rfid has't readed in stock...");
 		}
@@ -103,6 +96,7 @@ public class BizProductStockServiceImpl implements BizProductStockService {
 			bizResp.setHasData("1");
 		} else {
 			bizResp.setAllPaided("1");
+			sensorUtils.openTheDoor();
 		}
 		return bizResp;
 	}

@@ -31,26 +31,30 @@ public class SensorUtils {
 	}
 
 	private SensorUtils() {
-
+		openPort();
 	}
 
 	private void closePort() {
-		SerialTool.closePort(this.serialPort);
+		// SerialTool.closePort(this.serialPort);
 	}
 
-	private void openPort() throws SerialPortParameterFailure, NotASerialPort, NoSuchPort, PortInUse, TooManyListeners {
+	private void openPort()  {
+		try {
+			this.serialPort = SerialTool.openPort(PORT, 9600);
 
-		this.serialPort = SerialTool.openPort(PORT, 9600);
-
-		SerialTool.addListener(this.serialPort, new SerialListener());
+			SerialTool.addListener(this.serialPort, new SerialListener());
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
+		
 	}
 
 	public SensorStatus getStatus() {
-		SensorStatus resutl = new SensorStatus();
+		SensorStatus result = new SensorStatus();
 		try {
 			this.status = null;
 
-			openPort();
+			// openPort();
 
 			byte[] giveMeTheData = { (byte) 170 };
 			SerialTool.sendToPort(this.serialPort, giveMeTheData);
@@ -60,20 +64,21 @@ public class SensorUtils {
 			if (this.status == null) {
 				Thread.sleep(1000);
 			} else {
-				resutl = convertStatus(this.status);
+				result = convertStatus(this.status);
+				return result;
 			}
 
 			if (this.status == null) {
 				Thread.sleep(1000);
 			} else {
-				resutl = convertStatus(this.status);
+				result = convertStatus(this.status);
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
 			closePort();
 		}
-		return resutl;
+		return result;
 	}
 
 	private SensorStatus convertStatus(String statusStr) {
@@ -81,21 +86,21 @@ public class SensorUtils {
 
 		String[] statusArray = statusStr.split("");
 
-		if ("1".equals(statusArray[0])) {
-
+		if ("0".equals(statusArray[5])) {
+			status.setDoorOpen(true);
 		}
-		if ("1".equals(statusArray[1])) {
-
+		if ("1".equals(statusArray[6])) {
+			status.setHasPerson(true);
 		}
-		if ("1".equals(statusArray[2])) {
-
+		if ("1".equals(statusArray[7])) {
+			status.setHasPerson(true);
 		}
 		return status;
 	}
 
 	public void holdTheDoor() {
 		try {
-			openPort();
+			// openPort();
 
 			byte[] holdTheDoor = { (byte) 171 };// 171 lock
 			SerialTool.sendToPort(this.serialPort, holdTheDoor);
@@ -109,7 +114,7 @@ public class SensorUtils {
 
 	public void openTheDoor() {
 		try {
-			openPort();
+			// openPort();
 
 			byte[] openTheDoor = { (byte) 172 };// 172 unlok
 			SerialTool.sendToPort(this.serialPort, openTheDoor);
