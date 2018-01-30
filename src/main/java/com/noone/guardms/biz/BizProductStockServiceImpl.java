@@ -9,10 +9,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
+import com.noone.guardms.biz.sensor.SensorStatus;
+import com.noone.guardms.biz.sensor.SensorUtils;
 import com.noone.guardms.common.basemodel.BizResponse;
 import com.noone.guardms.domain.OrderItem;
 import com.noone.guardms.domain.ProductStock;
@@ -27,49 +30,55 @@ public class BizProductStockServiceImpl implements BizProductStockService {
 	@Autowired
 	ProductStockRepository productStockRepository;
 
+	private Logger logger = Logger.getLogger(BizProductStockServiceImpl.class);
+
 	private final static String netRFIDIP = "192.168.5.7";
-	
+
 	@Override
 	public BizResponse<List<OrderItem>> retriveProductStockByReadRfid() {
 
 		BizResponse<List<OrderItem>> bizResp = new BizResponse<List<OrderItem>>();
-		
-		Calendar c = Calendar.getInstance();
-		c.set(Calendar.SECOND, c.get(Calendar.SECOND) - 7);
-		c.set(Calendar.MILLISECOND,0);
-		Date startDate = c.getTime();
-		
-		RFIDNetReaderFactory factory = RFIDNetReaderFactory.getInstance();
-		Set<String> rfidSet = factory.readAllRFID(netRFIDIP,startDate);
-		System.out.println("first :" + rfidSet);
 
-		if (rfidSet == null || rfidSet.size() == 0) {
-			bizResp.addError("No rfid has been readed...");
-			return bizResp;
+		SensorUtils sensorUtils = SensorUtils.getInstance();
+		SensorStatus status = sensorUtils.getStatus();
+		if (status == null) {
+			logger.error("Sensor encounted an Exception.");
 		} else {
-			try {
-				Thread.sleep(1000);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
+			if(status.isDoorOpen()) {
+				sensorUtils.holdTheDoor();
 			}
-			Set<String> rfidSet2 = factory.readAllRFID(netRFIDIP,startDate);
-			System.out.println("second :" + rfidSet2);
-			if(rfidSet2 != null) {
-				rfidSet.addAll(rfidSet2);
+			// No person
+			if (!status.isHasPerson()) {
+				return bizResp;
 			}
-			/*try {
-				Thread.sleep(1000);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-			Set<String> rfidSet3 = factory.readAllRFID(netRFIDIP,startDate);
-			System.out.println("third :" + rfidSet3);
-			if(rfidSet3 != null) {
-				rfidSet.addAll(rfidSet3);
-			}*/
 		}
-		
-		System.out.println("all rfid :" + rfidSet);
+
+		Calendar c = Calendar.getInstance();
+		c.set(Calendar.SECOND, c.get(Calendar.SECOND) - 10);
+		c.set(Calendar.MILLISECOND, 0);
+		Date startDate = c.getTime();
+
+		RFIDNetReaderFactory factory = RFIDNetReaderFactory.getInstance();
+		Set<String> rfidSet = factory.readAllRFID(netRFIDIP, startDate);
+		logger.info("first :" + rfidSet);
+
+		try {
+			Thread.sleep(1000);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		Set<String> rfidSet2 = factory.readAllRFID(netRFIDIP, startDate);
+		logger.info("second :" + rfidSet2);
+		if (rfidSet2 != null) {
+			rfidSet.addAll(rfidSet2);
+		}
+		/*
+		 * try { Thread.sleep(1000); } catch (InterruptedException e) {
+		 * e.printStackTrace(); } Set<String> rfidSet3 =
+		 * factory.readAllRFID(netRFIDIP,startDate); System.out.println("third :" +
+		 * rfidSet3); if(rfidSet3 != null) { rfidSet.addAll(rfidSet3); }
+		 */
+		logger.info("all rfid :" + rfidSet);
 
 		List<ProductStock> stockList = new ArrayList<ProductStock>();
 
@@ -77,75 +86,39 @@ public class BizProductStockServiceImpl implements BizProductStockService {
 			ProductStock stock = getProductStockByCriteria(rfid);
 			if (stock != null) {
 				stockList.add(stock);
-			} else {
-
 			}
 		}
 
 		if (stockList.size() == 0) {
-			bizResp.addError("rfid has't readed in stock...");
-			return bizResp;
+			logger.info("rfid has't readed in stock...");
 		}
 
 		if (rfidSet.size() != stockList.size()) {
-			System.out.println("some rfid has't readed in stock...");
-			// bizResp.addError("some rfid has't readed in stock...");
-			// return bizResp;
+			logger.info("some rfid has't readed in stock...");
 		}
 
-		convertToOrderItem(stockList, bizResp);
+		boolean hasUnPaidedItem = checkHasUnpaidedItem(stockList);
+		
+		if (hasUnPaidedItem) {
+			bizResp.setHasData("1");
+		} else {
+			bizResp.setAllPaided("1");
+		}
 		return bizResp;
 	}
 
-	private List<OrderItem> convertToOrderItem(List<ProductStock> stockList, BizResponse<List<OrderItem>> bizResp) {
-		List<OrderItem> list = new ArrayList<OrderItem>();
-		Map<String, OrderItem> map = new HashMap<String, OrderItem>();
-
-		Double totalFee = 0.0;
+	private boolean checkHasUnpaidedItem(List<ProductStock> stockList) {
+		boolean hasUnPaidedItem = false;
 		for (ProductStock stock : stockList) {
-			// 已经支付的 不要显示
+			// 已经支付
 			if ("PAID".equals(stock.getStatus())) {
 				continue;
 			}
-			String sku = stock.getSku();
-			OrderItem item = map.get(sku);
-
-			Double price = Double.parseDouble(StringUtils.isEmpty(stock.getPrice()) ? "0" : stock.getPrice());
-			String rfid = stock.getRfid();
-			if (item == null) {
-				item = new OrderItem();
-				item.setSku(sku);
-				item.setName(stock.getName());
-				item.setPrice(price);
-				item.setRfids(rfid);
-				item.setQty(1);
-				item.setItemFee(price);
-				map.put(sku, item);
-			} else {
-				item.setQty(item.getQty() + 1);
-				item.setRfids(item.getRfids() + "&" + rfid);
-				item.setItemFee(item.getItemFee() + price);
-			}
-
-			double convertedItemFee = new BigDecimal(item.getItemFee()).setScale(3, BigDecimal.ROUND_HALF_UP)
-					.doubleValue();
-			item.setItemFee(convertedItemFee);
-
-			totalFee += price;
+			hasUnPaidedItem = true;
+			break;
 		}
-
-		list.addAll(map.values());
-		double convertedTotalFee = new BigDecimal(totalFee).setScale(3, BigDecimal.ROUND_HALF_UP).doubleValue();
-		bizResp.setTotalFee(convertedTotalFee);
-		bizResp.setData(list);
 		
-		if(list.size() == 0) {
-			bizResp.setAllPaided("1");
-		} else {
-			bizResp.setHasData("1");
-		}
-
-		return list;
+		return hasUnPaidedItem;
 	}
 
 	public ProductStock getProductStockByCriteria(String rfid) {
